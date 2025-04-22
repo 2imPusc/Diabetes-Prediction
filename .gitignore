@@ -1,0 +1,7 @@
+# Dữ liệu lớn và file tạm
+data/
+models/
+__pycache__/
+*.pyc
+*.pkl
+.env
