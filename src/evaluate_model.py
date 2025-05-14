@@ -1,7 +1,7 @@
 import pandas as pd
+from sklearn.metrics import classification_report, roc_auc_score
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import classification_report, roc_auc_score
 
 def evaluate_models(models, X_test, y_test):
     results = {}
@@ -22,11 +22,22 @@ def evaluate_models(models, X_test, y_test):
             'Training Time': model_info['training_time']
         }
 
-    return pd.DataFrame(results).T
+    results_df = pd.DataFrame(results).T
+    return results_df
 
-def visualize_results(results_df):
+def visualize_resampling_comparison(comparison_df, metric):
+    if metric not in comparison_df.columns:
+        print(f"⚠️ Metric '{metric}' not found in DataFrame. Available columns: {list(comparison_df.columns)}")
+        return
+
     plt.figure(figsize=(10, 6))
-    sns.barplot(x='Recall (Class 1)', y=results_df.index, data=results_df)
-    plt.title('Comparison of Recall (Class 1) Across Models')
-    plt.savefig('model_comparison_recall.png')
+    sns.barplot(x=metric, y=comparison_df.index, data=comparison_df, palette='viridis')
+    plt.title(f'Comparison of {metric} Across Resampling Methods')
+    plt.xlabel(metric)
+    plt.ylabel('Resampling Method')
+    plt.grid(True, linestyle='--', alpha=0.6)
+
+    os.makedirs("figures", exist_ok=True)
+    file_name = f'figures/resampling_{metric.lower().replace(" ", "_")}_comparison.png'
+    plt.savefig(file_name)
     plt.show()

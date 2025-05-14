@@ -1,7 +1,8 @@
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import train_test_split
+from imblearn.over_sampling import SMOTE, BorderlineSMOTE
+from imblearn.combine import SMOTEENN
 
 def load_and_preprocess_data(file_path):
     # Nạp dữ liệu
@@ -17,7 +18,7 @@ def load_and_preprocess_data(file_path):
 
     return data
 
-def split_and_balance_data(data, test_size=0.2, random_state=42):
+def split_and_balance_data(data, test_size=0.2, random_state=42, resampling_method='smote'):
     # Chia dữ liệu thành tập train và test trước khi chuẩn hóa
     X = data.drop('diabetes', axis=1)
     y = data['diabetes']
@@ -30,11 +31,20 @@ def split_and_balance_data(data, test_size=0.2, random_state=42):
     # Chuẩn hóa trên tập train
     X_train[numerical_cols] = scaler.fit_transform(X_train[numerical_cols])
     
-    # Áp dụng chuẩn hóa cho tập test (chỉ dùng transform, không fit lại)
+    # Áp dụng chuẩn hóa cho tập test
     X_test[numerical_cols] = scaler.transform(X_test[numerical_cols])
 
-    # Cân bằng dữ liệu bằng SMOTE (chỉ áp dụng trên tập train)
-    smote = SMOTE(random_state=random_state)
-    X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
+    # Chọn phương pháp resampling
+    if resampling_method == 'smote':
+        sampler = SMOTE(random_state=random_state)
+    elif resampling_method == 'smote-enn':
+        sampler = SMOTEENN(random_state=random_state)
+    elif resampling_method == 'borderline-smote':
+        sampler = BorderlineSMOTE(random_state=random_state)
+    else:
+        raise ValueError("Phương pháp resampling không hợp lệ. Chọn 'smote', 'smote-enn', hoặc 'borderline-smote'.")
+
+    # Cân bằng dữ liệu bằng phương pháp đã chọn
+    X_train_res, y_train_res = sampler.fit_resample(X_train, y_train)
 
     return X_train, X_test, y_train, y_test, X_train_res, y_train_res, scaler
